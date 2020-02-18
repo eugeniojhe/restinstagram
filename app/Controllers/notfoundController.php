@@ -1,7 +1,10 @@
 <?php 
 	namespace app\Controllers;
-	use lib\Controller; 
+	use lib\Core\Controller; 
 	
-	class notFoundController extends Controler {
+	class notFoundController extends Controller {
+		public function index(){
+			echo "Controller não encontrado"; 
+		}
 
 	}

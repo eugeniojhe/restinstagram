@@ -1,6 +1,7 @@
 <?php 
 	global $routes;
 	$routes = array(); 
+	$routes['/teste'] = '/home/ola';
 	$routes['/users/login'] = '/users/login'; 
 	$routes['/users/new'] = '/users/new'; 
 	$routes['/users/feed'] = '/users/feed';
