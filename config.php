@@ -8,12 +8,14 @@ if(ENVIRONMENT == 'development') {
 	$config['host'] = 'localhost';
 	$config['dbuser'] = 'root';
 	$config['dbpass'] = '';
+	$config['jwt_secret_key'] = "udianddf123456";
 } else {
 	define("BASE_URL", "http://localhost/restinstagram/");
 	$config['dbname'] = 'db_instagran';
 	$config['host'] = 'localhost';
 	$config['dbuser'] = 'root';
 	$config['dbpass'] = '';
+	$config['jwt_secret_key'] = "udianddf123456";
 }
 
 global $db;

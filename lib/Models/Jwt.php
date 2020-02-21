@@ -1,7 +1,7 @@
 <?php
 	namespace lib\Models;
 
-	class Jwt extends Model {
+	class Jwt {
 
 		public function create($data) {
 			global $config;

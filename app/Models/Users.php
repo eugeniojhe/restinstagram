@@ -1,24 +1,31 @@
 <?php 
 	namespace app\Models; 
 	use lib\Core\Model; 
+	use lib\Models\Jwt; 
 
 	class Users extends Model{
 		private $usr_id; 
 		public function create($name,$email,$password,$avatar = null)
 		{
-			if (!emailExist($email)){
+			if (!$this->emailExist($email)){
 				$hash = password_hash($password,PASSWORD_DEFAULT); 
 				$sql = "INSERT INTO users 
 				        (name,email,password,avatar) 
 				        VALUES (:name, :email,
-				                :password,:avatar:"; 
+				                :password,:avatar)"; 
 			    $sql = $this->db->prepare($sql); 
 			    $sql->bindValue(":name",$name);
 			    $sql->bindValue(":email",$email); 
 			    $sql->bindValue(":password",$hash);
 			    $sql->bindValue(":avatar",$avatar);
-			    $sql->execute();
-			    $this->usr_id = $this->db->lastInsertId(); 
+			    try{
+			    	$sql->execute();
+			    }catch(Exception $e){
+			    	return false; 
+			    }
+			    
+			    $this->usr_id = $this->db->lastInsertId();
+			    return true;  
 			}else{
 				return false; 
 			}

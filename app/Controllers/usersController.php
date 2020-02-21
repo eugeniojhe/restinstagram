@@ -8,7 +8,6 @@
 			$array = array('error' => 'Login realizado com sucesso');
 			$method = $this->getMethod();
 			$data = $this->getRequestData();
-			$method = "POST"; 
 			if ($method == 'POST'){
 				$ioUsers = new Users(); 
 				if(!empty($data['email']) && !empty($data['password'])){
@@ -28,20 +27,33 @@
 			}
 			$this->jsonReturn($array); 
 		}
-		public function create($name,$email,$password)
+		public function create()
 		{
+			$ioUser = new Users(); 
 			$array = array('error' => ''); 
 			$method = $this->getMethod();
 			$data = $this->getRequestData();
 			if ($method = "POST"){
-				if (!empty($data['name']) && !empty($data['email']) && !empty($data['password']){
+				if (!empty($data['name']) && !empty($data['email']) && !empty($data['password'])){
+					if (filter_var($data['email'],FILTER_VALIDATE_EMAIL)){
+						if ($ioUser->create($data['name'],$data['email'],$data['password'])){
+							$array['jwt'] = $ioUser->createJwt(); 
+
+						}else{
+							$array['error'] = "Failed - Creating user"; 
+						}
+
+					}else{
+						$array['error'] = "Email invalid"; 
+					}
 					
 				}else{
-					$array['error'] = "Required fields are empty "
+					$array['error'] = "Required fields are empty ";
 				}
 			}else{
 			 	$array['error'] = "Invalid http method"; 
 			}
-
+			 $this->jsonReturn($array);
 		}
+
 	}
