@@ -5,7 +5,7 @@
 	class usersController extends Controller {
 		public function login()
 		{
-			$array = array('error' => 'Login realizado com sucesso');
+			$array = array('error' => 'User is now logged');
 			$method = $this->getMethod();
 			$data = $this->getRequestData();
 			if ($method == 'POST'){
@@ -40,7 +40,7 @@
 							$array['jwt'] = $ioUser->createJwt(); 
 
 						}else{
-							$array['error'] = "Failed - Creating user"; 
+							$array['error'] = "Failed - Creating user - Email already exist"; 
 						}
 
 					}else{
@@ -54,6 +54,40 @@
 			 	$array['error'] = "Invalid http method"; 
 			}
 			 $this->jsonReturn($array);
+		}
+
+		public function view($usr_id)
+		{
+			$return = array(
+				    'error'  => '',
+				    'logged' => false); 
+			$method = $this->getMethod();
+			$data = $this->getRequestData(); 
+			$ioUsers = new Users(); 
+			if (!empty($data['jwt']) && $ioUsers->validateJwt($data['jwt'])){
+				$return['logged'] = true;
+				$return['isMe'] = false; 
+				if($usr_id == $ioUsers->getId()){
+					$return['isMe'] = true;
+				} 
+
+			}else{
+				$return['error'] = "Acces Denied"; 
+			}
+
+			switch($method){
+				case "GET":
+				   $return['user_info'] = $ioUser->loadInfo($usr_id);
+					break;
+				case "PUT":
+				    break; 
+				case "DELETE":
+				    break;
+				 default:
+				    $return['error'] = "Invalid Methodo for this app";  
+				    break; 
+			}
+			$this->jsonReturn($return); 
 		}
 
 	}

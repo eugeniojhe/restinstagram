@@ -66,9 +66,30 @@
 
 
 		}
+
+		public function getId()
+		{
+			return $this->usr_id; 
+		}
 		public function createJwt()
 		{
 			$jwt = new Jwt();
 			return $jwt->create(array('usr_id' => $this->usr_id));
+		}
+		public function validateJwt($token)
+		{
+			$ioJwt = new Jwt();
+			$jwtDecode = $ioJwt->validate($token); 
+			if (isset($jwtDecode->usr_id)){
+				$this->usr_id  = $jwtDecode->usr_id;
+				return true; 
+			}else{
+				return false; 
+			}
+		}
+
+		public function loadInfo($usrId)
+		{
+
 		}
 	}
