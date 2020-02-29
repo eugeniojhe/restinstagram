@@ -3,91 +3,100 @@
 	use lib\Core\Controller;
 	use app\Models\Users;  
 	class usersController extends Controller {
+		private $idUser; 
+        public function __construct()
+        {
+        	$this->ioUser = new Users(); 
+        }
+
+        //Validate user login 
 		public function login()
 		{
-			$array = array('error' => 'User is now logged');
+			$response = array('error' => 'User is now logged');
 			$method = $this->getMethod();
 			$data = $this->getRequestData();
 			if ($method == 'POST'){
-				$ioUsers = new Users(); 
 				if(!empty($data['email']) && !empty($data['password'])){
-					if ($ioUsers->validateCredentials($data['email'],$data['password'])){
-						$array['jwt'] = $ioUsers->createJwt(); 
+					if ($this->ioUser->validateCredentials($data['email'],$data['password'])){
+						$response['jwt'] = $this->ioUser->createJwt(); 
 
 					}else {
-						$array['error'] = 'Senha/Email invalido'; 
+						$response['error'] = 'Senha/Email invalido'; 
 					}
 
 				}else{
-					$array['error'] =  "Password and Email are required"; 
+					$response['error'] =  "Password and Email are required"; 
 				}
 			}else{
-				$array['error'] = 'Acesso negado - Invalid Method'; 
+				$response['error'] = 'Acesso negado - Invalid Method'; 
 
 			}
-			$this->jsonReturn($array); 
+			$this->jsonReturn($response); 
 		}
+
+		//Create a new user - 
 		public function create()
 		{
-			$ioUser = new Users(); 
-			$array = array('error' => ''); 
+			$response = array('error' => ''); 
 			$method = $this->getMethod();
 			$data = $this->getRequestData();
 			if ($method = "POST"){
 				if (!empty($data['name']) && !empty($data['email']) && !empty($data['password'])){
 					if (filter_var($data['email'],FILTER_VALIDATE_EMAIL)){
-						if ($ioUser->create($data['name'],$data['email'],$data['password'])){
-							$array['jwt'] = $ioUser->createJwt(); 
+						if ($this->ioUser->create($data['name'],$data['email'],$data['password'])){
+							$response['jwt'] = $this->ioUser->createJwt(); 
 
 						}else{
-							$array['error'] = "Failed - Creating user - Email already exist"; 
+							$response['error'] = "Failed - Creating user - Email already exist"; 
 						}
 
 					}else{
-						$array['error'] = "Email invalid"; 
+						$response['error'] = "Email invalid"; 
 					}
 					
 				}else{
-					$array['error'] = "Required fields are empty ";
+					$response['error'] = "Required fields are empty ";
 				}
 			}else{
-			 	$array['error'] = "Invalid http method"; 
+			 	$response['error'] = "Invalid http method {$method}"; 
 			}
-			 $this->jsonReturn($array);
+			 $this->jsonReturn($response);
 		}
 
+        //Return data user 
 		public function view($usr_id)
 		{
-			$return = array(
-				    'error'  => '',
-				    'logged' => false); 
+			$response = array(
+		    'error'  => '',
+		    'logged' => false); 
 			$method = $this->getMethod();
 			$data = $this->getRequestData(); 
-			$ioUsers = new Users(); 
-			if (!empty($data['jwt']) && $ioUsers->validateJwt($data['jwt'])){
-				$return['logged'] = true;
-				$return['isMe'] = false; 
-				if($usr_id == $ioUsers->getId()){
-					$return['isMe'] = true;
+			if (!empty($data['jwt']) && $this->ioUser->validateJwt($data['jwt'])){
+				$response['logged'] = true;
+				$response['isMe'] = false; 
+				if($usr_id == $this->ioUser->getId()){
+					$response['isMe'] = true;
 				} 
-
-			}else{
-				$return['error'] = "Acces Denied"; 
-			}
-
-			switch($method){
-				case "GET":
-				   $return['user_info'] = $ioUser->loadInfo($usr_id);
-					break;
-				case "PUT":
-				    break; 
-				case "DELETE":
-				    break;
-				 default:
-				    $return['error'] = "Invalid Methodo for this app";  
-				    break; 
-			}
-			$this->jsonReturn($return); 
+				switch($method){
+					case "GET":
+		   				$response['user_info'] = $this->ioUser->loadInfo($usr_id);
+		   				if (count($response['user_info']) == 0) {
+		   				$response['error'] = "Invalid user Code"; 
+		   				}
+						break;
+					case "PUT":
+			    		$response = $this->ioUser->edit($usr_id,$data);
+		    			break; 
+					case "DELETE":
+					    $response = $this->ioUser->delete($usr_id); 
+		    			break;
+		 			default:
+		 				$response['error'] = "Invalid Method {$method} for this app";  
+		    		break;
+		    	}
+		    }else{
+				$response['error'] = "Access Denied - Please enter jwt hash";
+			}	
+			$this->jsonReturn($response); 
 		}
-
 	}

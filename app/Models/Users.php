@@ -2,8 +2,11 @@
 	namespace app\Models; 
 	use lib\Core\Model; 
 	use lib\Models\Jwt; 
+	use \PDO; 
+
 
 	class Users extends Model{
+		//Insert a new user in BD 
 		private $usr_id; 
 		public function create($name,$email,$password,$avatar = null)
 		{
@@ -30,6 +33,7 @@
 				return false; 
 			}
 		}
+		//Verify if email exist 
 		public function emailExist($email)
 		{
 			$sql = "SELECT id FROM users 
@@ -43,6 +47,9 @@
 				return false; 
 			}
 		}
+
+
+		//Validate user email and password 
 		public function validateCredentials($email,$password)
 		{
 			$sql = "SELECT id,password 
@@ -71,6 +78,7 @@
 		{
 			return $this->usr_id; 
 		}
+		//Create a jwt 
 		public function createJwt()
 		{
 			$jwt = new Jwt();
@@ -88,8 +96,71 @@
 			}
 		}
 
+        //get and return user data 
 		public function loadInfo($usrId)
 		{
-
+		    $ioFollowers = new Followers(); 
+		    $ioPhotos = new Photos(); 
+		    $response = array(); 
+			$sql = "SELECT id, name, email, avatar FROM users 
+			        WHERE id = :id"; 
+			$sql = $this->db->prepare($sql); 
+			$sql->bindValue(":id",$usrId); 
+			$sql->execute(); 
+			if ($sql->rowCount() > 0){
+				$response = $sql->fetch(PDO::FETCH_ASSOC); 
+				if (!empty($response['avatar'])){
+                    $response['avatar'] = BASE_URL.'app/media/images/'.$response['avatar']; 
+				}else{
+					$response['avatar'] = BASE_URL.'app/media/images/default.jpg';
+				}
+				$response['following'] = $ioFollowers->getCountFollowing($usrId);
+				$response['followed']  = $ioFollowers->getCountFollowed($usrId); 
+				$response['user_photos'] = $ioPhotos->getCountPhotos($usrId); 
+			}
+			return $response; 
 		}
+		public function edit($usrId,$data)
+				{
+				  $dataToChange = array(); 
+				  if ($usrId === $this->getId()){
+				  	if (!empty($data['name'])){
+				  	   $data['name'] = $data['name'];	
+				  	} 
+				  	if (!empty($data['password'])){
+				  		$dataToChange['password'] = password_hash($data['password'],PASSWORD_DEFAULT); 
+				  	}
+				    if (!empty($data['email'])){
+				    	if(filter_var($data['email'],FILTER_VALIDATE_EMAIL) )
+				    	{
+				    		if (!$this->emailExist($data['email'])){
+				    			$dataToChange['email'] = $data['email'];
+
+				    		}else {
+				    			return "Email already exist"; 
+				    		}
+				    		 
+				    	}else{
+				    		return "Invalid Email"; 
+				    	}
+				    }
+				     if (count($dataToChange) >0){
+				     	foreach($dataToChange as $key => $value){
+				     		$fieldsToChange[] = $key. ' = '.':'.$key; 
+				     	}
+				    	 $sql = "UPDATE users SET ".implode(',',$fieldsToChange)." WHERE id = :id";
+				    	$sql = $this->db->prepare($sql); 
+				    	$sql->bindValue(":id",$usrId); 
+				    	foreach($dataToChange as $key => $value){
+				    		$sql->bindValue(":".$key,$value); 
+				    	}  
+				    	$sql->execute();
+				    	return "";  
+				     }
+                     
+		 		 }else{
+		  			return "You are not able to edit this user info"; 
+		  		}
+		}
+
 	}
