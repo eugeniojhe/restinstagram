@@ -28,7 +28,7 @@
 					$response['error'] =  "Password and Email are required"; 
 				}
 			}else{
-				$response['error'] = 'Acesso negado - Invalid Method'; 
+				$response['error'] = 'Acesso negado - You must use the POST method'; 
 
 			}
 			$this->jsonReturn($response); 
@@ -70,33 +70,66 @@
 		    'error'  => '',
 		    'logged' => false); 
 			$method = $this->getMethod();
-			$data = $this->getRequestData(); 
-			if (!empty($data['jwt']) && $this->ioUser->validateJwt($data['jwt'])){
-				$response['logged'] = true;
-				$response['isMe'] = false; 
-				if($usr_id == $this->ioUser->getId()){
-					$response['isMe'] = true;
-				} 
-				switch($method){
-					case "GET":
-		   				$response['user_info'] = $this->ioUser->loadInfo($usr_id);
-		   				if (count($response['user_info']) == 0) {
-		   				$response['error'] = "Invalid user Code"; 
-		   				}
-						break;
-					case "PUT":
-			    		$response = $this->ioUser->edit($usr_id,$data);
-		    			break; 
-					case "DELETE":
-					    $response = $this->ioUser->delete($usr_id); 
-		    			break;
-		 			default:
-		 				$response['error'] = "Invalid Method {$method} for this app";  
-		    		break;
-		    	}
-		    }else{
-				$response['error'] = "Access Denied - Please enter jwt hash";
-			}	
+			$data = $this->getRequestData();
+			if (!empty($data['jwt'])){
+				if ($this->ioUser->validateJwt($data['jwt'])){
+					$response['logged'] = true;
+					$response['isMe'] = false; 
+					if($usr_id == $this->ioUser->getId()){
+						$response['isMe'] = true;
+					} 
+					switch($method){
+						case "GET":
+			   				$response['user_info'] = $this->ioUser->loadInfo($usr_id);
+			   				if (count($response['user_info']) == 0) {
+			   				$response['error'] = "Invalid user Code"; 
+			   				}
+							break;
+						case "PUT":
+				    		$response = $this->ioUser->edit($usr_id,$data);
+			    			break; 
+						case "DELETE":
+						    $response['msg'] = $this->ioUser->delete($usr_id,$data); 
+			    			break;
+			 			default:
+			 				$response['error'] = "Invalid Method {$method} for this app";  
+			    		break;
+			    	}	    	
+
+				}else{
+					$response['error'] = "jwt is not valid for this user"; 
+				}
+			}else{
+				$response['error'] = "Access Denied - Please enter JWT hash";
+			}				
 			$this->jsonReturn($response); 
+		}
+
+		public function  feed()
+		{
+			$response = array(
+		    'error'  => '',
+		    'logged' => false);
+		    $method = $this->getMethod();
+			$data = $this->getRequestData();
+			if ($method = "GET"){
+				if (!empty($data['jwt'])){
+					if ($this->ioUser->validateJwt($data['jwt'])){
+						$response['logged'] = true;
+						   $offset = intval((!empty($data['offset'])?$data['offset']:0));
+					    $itemsPerPage = intval((!empty($data['itemspage'])?$data['itemspage']:10));
+					    $response['user_feed'] = $this->ioUser->feed($offset,$itemsPerPage);	     
+					}else {
+						$response['error'] = "Please enter a valid jwt"; 
+					}
+
+				}else{
+					$response['error'] = "Please jwt is required"; 
+				}
+
+			}else{
+				$response['error'] = "Please inter a valid method. It must be GET methdo"; 
+			}
+			$this->jsonReturn($response); 	
 		}
 	}

@@ -17,4 +17,32 @@
             }
 			return $response; 
 		}
+        public getFeedPhotos($usersFollowindIds,$offset,$itemsPerPage)
+        {
+        	$response = array();
+        	$ioPhotoLikes = new Photo_like(); 
+        	$ioPhotoComments = new Photo_comments(); 
+        	if (count($usersFollowindIds) > 0 ){
+        		$sql = "SELECT p.*, u.*
+        				FROM photos p  
+						LEFT JOIN USERS  u ON (u.id = p.id_user)
+						LEFT JOIN photo_coments pl ON(u.id = pl.
+						AND p.id_user IN(".implode(',',$usersFollowindIds).")
+						ORDER BY DESC p.id 
+						LIMIT ".$offset." ,".$itemsPerPage;
+				$sql = $this->db->query($sql); 
+				if ($sql->rowCount() > 0){
+					$response = $sql->fetchall(\PDO::FETCH_ASSOC);
+					foreach($response as $key => $value){
+						$response[$key]['url'] =  BASE_URL."	media/images/".$response[$key]['url']; 
+						 $response[$key]['likes'] = $ioPhotoLikes->countLikes($value['id']);
+						 $response[$key]['comments'] = $ioPhotoComments->getComments($value['id']); 
+					} 
+
+				}
+        	}
+
+        	return $response;. 
+        }
+
 	}

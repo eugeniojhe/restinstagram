@@ -103,7 +103,9 @@
 		    $ioPhotos = new Photos(); 
 		    $response = array(); 
 			$sql = "SELECT id, name, email, avatar FROM users 
-			        WHERE id = :id"; 
+			        WHERE id = :id
+			        AND id_active <> 'N' 
+			        OR id_active IS NULL"; 
 			$sql = $this->db->prepare($sql); 
 			$sql->bindValue(":id",$usrId); 
 			$sql->execute(); 
@@ -144,6 +146,9 @@
 				    		return "Invalid Email"; 
 				    	}
 				    }
+				     if (!empty($data['id_ativo'])){
+				     	$dataToChange['id_ativo'] = $data['id_ativo']; 
+				     }
 				     if (count($dataToChange) >0){
 				     	foreach($dataToChange as $key => $value){
 				     		$fieldsToChange[] = $key. ' = '.':'.$key; 
@@ -163,4 +168,26 @@
 		  		}
 		}
 
+        //It will not delete from data base, 
+        //this will be updated with "S" meaning active or "N" meaning inactive
+		public function delete($usrId,$data)
+		{
+			if ($usrId === $this->getId()){
+				if ($data['id_active'] == 'S' || $data['id_active'] == 'N'){
+						$sql = "UPDATE users SET id_active = :id_active
+						    WHERE id = :id";
+					    $sql = $this->db->prepare($sql);
+					    $sql->bindValue(":id_active",strtoupper($data['id_active']));
+					    $sql->bindValue(":id",$usrId); 
+					    $sql->execute(); 
+					    return 'Edit user went ok'; 
+					
+				}else{
+					return "id_active must be 'N' or 'S'"; 
+				}
+
+			}else{
+				return "You are not able to edit this user"; 
+			}
+		}
 	}

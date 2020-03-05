@@ -32,4 +32,21 @@
     		return $response;
     	}
 
+        public function getFollowing()
+        {            
+            $response = $array();
+            $sql = "SELECT id_followed 
+                    WHERE id_follower = :id_follower";
+            $sql = $this->db->prepare($sql);
+            $sql->bindValue(":id_follower",$idUser); 
+            $sql->execute(); 
+            if ($sql->rowCount() > 0){
+                $ids = $sql->fetchall();
+                foreach($ids as  $id){
+                    $response[] = $id['id_followed'];
+                }                
+            }
+            return $response; 
+        }
+
 	}
