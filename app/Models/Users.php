@@ -122,6 +122,16 @@
 			}
 			return $response; 
 		}
+
+		public function feed($offset = 0 ,$itemsPerPage = 10)
+		{
+			$ioFollowers = new Followers();
+			$ioPhotos = new Photos(); 
+			$usersFollowing = $ioFollowers->getFollowing($this->getId());  
+			return $ioPhotos->getFeedPhotos($userFollowing,$offset,$itemPerPage); 
+		}
+
+		
 		public function edit($usrId,$data)
 				{
 				  $dataToChange = array(); 
@@ -190,4 +200,5 @@
 				return "You are not able to edit this user"; 
 			}
 		}
+
 	}
