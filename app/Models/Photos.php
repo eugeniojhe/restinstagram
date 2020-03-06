@@ -17,32 +17,38 @@
             }
 			return $response; 
 		}
-        public getFeedPhotos($usersFollowindIds,$offset,$itemsPerPage)
+        public function getFeedPhotos($usersFollowingIds,$offset,$itemsPerPage)
         {
         	$response = array();
-        	$ioPhotoLikes = new Photo_like(); 
+        	$ioPhotoLikes = new Photo_likes(); 
         	$ioPhotoComments = new Photo_comments(); 
-        	if (count($usersFollowindIds) > 0 ){
-        		$sql = "SELECT p.*, u.*
+        	if (count($usersFollowingIds) > 0 ){
+        		$sql = "SELECT p.id,p.id_user, p.url, u.id, u.name, pc.id_user AS user_comment, pc.comment
         				FROM photos p  
 						LEFT JOIN USERS  u ON (u.id = p.id_user)
-						LEFT JOIN photo_coments pl ON(u.id = pl.
-						AND p.id_user IN(".implode(',',$usersFollowindIds).")
-						ORDER BY DESC p.id 
+						LEFT JOIN photo_comments pc ON(p.id = pc.id_photo)
+						WHERE p.id_user IN(".implode(',',$usersFollowingIds).")
+						ORDER BY p.id DESC
 						LIMIT ".$offset." ,".$itemsPerPage;
-				$sql = $this->db->query($sql); 
+                        
+        		try{
+					 $sql = $this->db->query($sql);
+				}catch(Exception $e){
+					return $e->getMessage(); 
+				}
+				 
 				if ($sql->rowCount() > 0){
 					$response = $sql->fetchall(\PDO::FETCH_ASSOC);
 					foreach($response as $key => $value){
-						$response[$key]['url'] =  BASE_URL."	media/images/".$response[$key]['url']; 
-						 $response[$key]['likes'] = $ioPhotoLikes->countLikes($value['id']);
-						 $response[$key]['comments'] = $ioPhotoComments->getComments($value['id']); 
+						$response[$key]['url'] =  BASE_URL."media/images/".$response[$key]['url'];
+						 // $response[$key]['likes'] = $ioPhotoLikes->countLikes($value['id']);
+						 // $response[$key]['comments'] = $ioPhotoComments->getComments($value['id']); 
 					} 
 
 				}
         	}
-
-        	return $response;. 
+        	print_r($response); 
+        	//return $response; 
         }
 
 	}

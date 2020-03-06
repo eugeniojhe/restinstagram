@@ -127,8 +127,9 @@
 		{
 			$ioFollowers = new Followers();
 			$ioPhotos = new Photos(); 
-			$usersFollowing = $ioFollowers->getFollowing($this->getId());  
-			return $ioPhotos->getFeedPhotos($userFollowing,$offset,$itemPerPage); 
+			$usersFollowing = $ioFollowers->getFollowing($this->getId()); 
+			  
+			return $ioPhotos->getFeedPhotos($usersFollowing,$offset,$itemsPerPage); 
 		}
 
 		

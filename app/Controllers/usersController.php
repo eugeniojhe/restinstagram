@@ -58,9 +58,9 @@
 					$response['error'] = "Required fields are empty ";
 				}
 			}else{
-			 	$response['error'] = "Invalid http method {$method}"; 
+			 	$response['error'] = "Invalid http method. You must use POST method"; 
 			}
-			 $this->jsonReturn($response);
+			$this->jsonReturn($response);
 		}
 
         //Return data user 

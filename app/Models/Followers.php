@@ -32,13 +32,15 @@
     		return $response;
     	}
 
-        public function getFollowing()
+        public function getFollowing($usrId)
         {            
-            $response = $array();
+            
+            $response = array();
             $sql = "SELECT id_followed 
+                    FROM followers 
                     WHERE id_follower = :id_follower";
             $sql = $this->db->prepare($sql);
-            $sql->bindValue(":id_follower",$idUser); 
+            $sql->bindValue(":id_follower",$usrId); 
             $sql->execute(); 
             if ($sql->rowCount() > 0){
                 $ids = $sql->fetchall();
