@@ -8,7 +8,7 @@
 	$routes['/users/{id}/photos'] = '/users/photos/:id'; 
 	$routes['/users/{id}/follow'] = '/users/follow/:id'; 
 
-	$routes['/photos/random/'] = "/photos/random"; 
+	$routes['/photos/random'] = "/photos/random"; 
 	$routes['/photos/{id}'] = '/photos/view/:id'; 
 	$routes['/photos/{id}/comment'] = '/photos/comment/:id'; 
 	$routes['/photos/{id}/like'] = "/photos/like/:id"; 

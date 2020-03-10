@@ -12,7 +12,7 @@
 			$url .= $_GET['url'];
 		}
 		$url = $this->checkRoutes($url);
-      	$params = array();
+		$params = array();
 		if(!empty($url) && $url != '/') {
 			$url = explode('/', $url);
 			array_shift($url);
@@ -35,7 +35,6 @@
 			$currentController = 'HomeController';
 			$currentAction = 'index';
 		}
-
 		$currentController = ucfirst($currentController);
 		$prefix = 'app\Controllers\\';
 		if(!file_exists('app/Controllers/'.$currentController.'.php') ||

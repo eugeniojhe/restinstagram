@@ -4,11 +4,45 @@
 	use app\Models\Users; 
 	use app\Models\Photos; 
 
-	class usersController extends Controller {
-		private $idUser; 
+	class photosController extends Controller {
+		private $ioUser; 
+		private $ioPhotos; 
         public function __construct()
         {
         	$this->ioUser = new Users(); 
+        	$this->ioPhotos = new Photos(); 
+        }
+
+
+        public function random()
+        {
+        	$response = array(
+		    'error'  => '',
+		    'logged' => false);
+		    $method = $this->getMethod();
+			$data = $this->getRequestData();
+			if ($method = "GET"){
+				if (!empty($data['jwt'])){
+					if ($this->ioUser->validateJwt($data['jwt'])){
+						$response['logged'] = true;
+						 $itemsPerPage = intval((!empty($data['itemspage'])?$data['itemspage']:10));
+						$except = array(); 
+						if (!empty($data['except'])){
+							$except[] = $data['except']; 
+						}
+					    $response['aleatory_photos'] = $this->ioPhotos->randomPhotos($itemsPerPage,$except);	     
+					}else {
+						$response['error'] = "Please enter a valid jwt"; 
+					}
+
+				}else{
+					$response['error'] = "Please jwt is required"; 
+				}
+
+			}else{
+				$response['error'] = "Please inter a valid method. It must be GET method"; 
+			}
+			$this->jsonReturn($response);
         }
 
         //Validate user login 

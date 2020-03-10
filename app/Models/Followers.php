@@ -34,7 +34,6 @@
 
         public function getFollowing($usrId)
         {            
-            
             $response = array();
             $sql = "SELECT id_followed 
                     FROM followers 
@@ -50,5 +49,4 @@
             }
             return $response; 
         }
-
 	}

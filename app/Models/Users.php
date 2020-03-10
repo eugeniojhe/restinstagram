@@ -125,11 +125,14 @@
 
 		public function feed($offset = 0 ,$itemsPerPage = 10)
 		{
+			$response = array(); 
 			$ioFollowers = new Followers();
 			$ioPhotos = new Photos(); 
 			$usersFollowing = $ioFollowers->getFollowing($this->getId()); 
-			  
-			return $ioPhotos->getFeedPhotos($usersFollowing,$offset,$itemsPerPage); 
+			if (count($usersFollowing)>0){
+				$response = $ioPhotos->getFeedPhotos($usersFollowing,$offset,$itemsPerPage);
+			} 
+			return $response;  
 		}
 
 		
