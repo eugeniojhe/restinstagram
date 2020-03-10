@@ -6,6 +6,7 @@
 			$response = 0;
 			$sql = "SELECT pc.id_photo, 
 			               pc.id_user,
+			               pc.comment,
 			               u.name 
 			        FROM photo_comments pc 
 			        LEFT JOIN users u

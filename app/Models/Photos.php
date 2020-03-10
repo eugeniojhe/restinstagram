@@ -5,7 +5,7 @@
 		public function getCountPhotos($usrId)
 		{
 			$response = 0; 
-			$sql = "SELECT count(id) as c
+			$sql = "SELECT COUNT(id) as c
 			        FROM photos
 			        WHERE id_user = :id_user";
 			$sql = $this->db->prepare($sql); 
@@ -43,7 +43,6 @@
 						 $response[$key]['avatar'] = BASE_URL."media/images/".$response[$key]['avatar']; 
 						 $response[$key]['comments'] = $ioPhotoComments->getComments($value['id']); 
 					} 
-
 				}
         	}
         	return $response; 
@@ -109,4 +108,95 @@
         	return $response; 
         }
 
+
+        public function get($photoId)
+        {
+        	$response = array();
+        	$ioPhotoLikes = new Photo_likes(); 
+        	$ioPhotoComments = new Photo_comments();
+            $sql = "SELECT p.*, u.name, u.avatar
+                    FROM photos p
+                    LEFT JOIN users u ON(u.id = p.id_user)  
+                    WHERE p.id  = :id
+                    AND p.id_active <> 'N' 
+			        OR p.id_active IS NULL";         
+    		try{
+    			 $sql = $this->db->prepare($sql); 
+    			 $sql->bindValue(":id",$photoId); 
+				 $sql->execute();
+			}catch(Exception $e){
+				$response['error'] = $e->getMessage(); 
+			}
+			 
+			if ($sql->rowCount() > 0){
+				$response = $sql->fetch(\PDO::FETCH_ASSOC);
+			    $response['url'] =  BASE_URL."media/images/".$response['url'];
+				 $response['likes'] = $ioPhotoLikes->countLikes($response['id']);
+				 $response['avatar'] = BASE_URL."media/images/".$response['avatar']; 
+				 $response['comments'] = $ioPhotoComments->getComments($response['id']); 			 
+			}
+        	return $response; 
+        }
+
+        public function delete($photoId,$usrId)
+        {
+        	$this->db->beginTransaction(); 
+        	$sql = "SELECT id FROM photoS 
+        	        WHERE id = :id AND id_user= :id_user"; 
+        	$sql = $this->db->prepare($sql); 
+        	$sql->bindValue(":id",$photoId); 
+        	$sql->bindValue(":id_user",$usrId); 
+        	$sql->execute(); 
+        	if ($sql->rowCount()> 0){
+        		$sql =  "UPDATE photos SET id_active ='N'
+        		         WHERE id = :id"; 
+        		$sql = $this->db->prepare($sql);
+        		$sql->bindValue(":id",$photoId);
+        		try{
+        			$sql->execute();
+        			$this->db->commit(); 
+        		}catch(Exception $e){
+        			$this->db->rollback();
+        			$response = "Failed to update photos";  
+        		}
+        		
+        		//Archiving photos' relationships
+        		if ($sql->rowCount() > 0){
+        			//Archiving photos' likes
+        			$sql = "UPDATE photo_likes 
+        			        SET id_active = 'N';  
+        			        WHERE id_photo = :id_photo";
+        			 $sql = $this->db->prepare($sql);
+        			 $sql->bindValue(":id_photo",$photoId);
+        			 try{
+        			 	$sql->execute();
+        			 	$this->db->commit(); 
+        			 }catch(Exception $e){
+        			 	$this->db->rollback();
+        			 	$response = "Failed to update photo_likes";  
+        			 }
+        			
+
+        			 //Archiving photos' comments 
+        			 $sql = "UPDATE photo_comments 
+        			         SET id_active = 'N'
+        			         WHERE id_photo = :id_photo";
+        			 $sql = $this->db->prepare($sql);
+        			 try{
+        			 	$sql->execute();
+        			 	$this->db->commit(); 
+        			 }catch(Exception $e){
+        			 	$this->db->rollback();
+        			 	$response = "Failed to update photo_comments"; 
+        			 }
+        			  
+        			 $response =  "record deleted sucessfully"; 
+        		}else{
+        			$response =  "Record was not deleted"; 
+        		}
+        	}else{
+        		$response =  "You are not allowed to delete this photo"; 
+        	}
+        	return $response; 
+        }
 	}
