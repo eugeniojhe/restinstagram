@@ -6,6 +6,7 @@
 
 	class usersController extends Controller {
 		private $idUser; 
+		private $ioUser;
         public function __construct()
         {
         	$this->ioUser = new Users(); 
@@ -71,39 +72,45 @@
 			$response = array(
 		    'error'  => '',
 		    'logged' => false); 
-			$method = $this->getMethod();
+		    $method = $this->getMethod();
 			$data = $this->getRequestData();
-			if (!empty($data['jwt'])){
-				if ($this->ioUser->validateJwt($data['jwt'])){
-					$response['logged'] = true;
-					$response['isMe'] = false; 
-					if($usr_id == $this->ioUser->getId()){
-						$response['isMe'] = true;
-					} 
-					switch($method){
-						case "GET":
-			   				$response['user_info'] = $this->ioUser->loadInfo($usr_id);
-			   				if (count($response['user_info']) == 0) {
-			   				$response['error'] = "Invalid user Code"; 
-			   				}
-							break;
-						case "PUT":
-				    		$response = $this->ioUser->edit($usr_id,$data);
-			    			break; 
-						case "DELETE":
-						    $response['msg'] = $this->ioUser->delete($usr_id,$data); 
-			    			break;
-			 			default:
-			 				$response['error'] = "Invalid Method {$method} for this app";  
-			    		break;
-			    	}	    	
+		    if (is_int($usr_id)){
+		    	if (!empty($data['jwt'])){
+					if ($this->ioUser->validateJwt($data['jwt'])){
+						$response['logged'] = true;
+						$response['isMe'] = false; 
+						if($usr_id == $this->ioUser->getId()){
+							$response['isMe'] = true;
+						} 
+						switch($method){
+							case "GET":
+				   				$response['user_info'] = $this->ioUser->loadInfo($usr_id);
+				   				if (count($response['user_info']) == 0) {
+				   				$response['error'] = "Invalid user Code"; 
+				   				}
+								break;
+							case "PUT":
+					    		$response = $this->ioUser->edit($usr_id,$data);
+				    			break; 
+							case "DELETE":
+							    $response['msg'] = $this->ioUser->delete($usr_id,$data); 
+				    			break;
+				 			default:
+				 				$response['error'] = "Invalid Method {$method} for that action ".__METHOD__;  
+				    		break;
+				    	}	    	
 
+					}else{
+						$response['error'] = "jwt is not valid for this user and action ".__METHOD__; 
+					}
 				}else{
-					$response['error'] = "jwt is not valid for this user"; 
+					$response['error'] = "Access Denied - Please enter JWT hash for action ".__METHOD__;
 				}
-			}else{
-				$response['error'] = "Access Denied - Please enter JWT hash";
-			}				
+
+		    }else{
+		    	$response['error'] = "Parameter [{$usr_id}] must be numeric for action ".__METHOD__; 
+		    }
+							
 			$this->jsonReturn($response); 
 		}
 

@@ -118,8 +118,8 @@
                     FROM photos p
                     LEFT JOIN users u ON(u.id = p.id_user)  
                     WHERE p.id  = :id
-                    AND p.id_active <> 'N' 
-			        OR p.id_active IS NULL";         
+                    AND (p.id_active = UPPER('S') 
+			        OR p.id_active IS NULL)";         
     		try{
     			 $sql = $this->db->prepare($sql); 
     			 $sql->bindValue(":id",$photoId); 
@@ -134,69 +134,71 @@
 				 $response['likes'] = $ioPhotoLikes->countLikes($response['id']);
 				 $response['avatar'] = BASE_URL."media/images/".$response['avatar']; 
 				 $response['comments'] = $ioPhotoComments->getComments($response['id']); 			 
-			}
-        	return $response; 
+			}else{
+                $response['error'] = "Photo not existe or was deleted"; 
+            }
+           	return $response; 
         }
 
         public function delete($photoId,$usrId)
         {
         	$this->db->beginTransaction(); 
-        	$sql = "SELECT id FROM photoS 
-        	        WHERE id = :id AND id_user= :id_user"; 
+            $response = array(); 
+        	$sql = "SELECT id FROM photos 
+        	        WHERE id = :id
+                    AND id_user= :id_user
+                    AND (id_active = UPPER('S') 
+                    OR  id_active IS NULL)"; 
         	$sql = $this->db->prepare($sql); 
         	$sql->bindValue(":id",$photoId); 
         	$sql->bindValue(":id_user",$usrId); 
         	$sql->execute(); 
-        	if ($sql->rowCount()> 0){
-        		$sql =  "UPDATE photos SET id_active ='N'
-        		         WHERE id = :id"; 
-        		$sql = $this->db->prepare($sql);
-        		$sql->bindValue(":id",$photoId);
+        	if ($sql->rowCount() > 0){
+        		$sql =  "UPDATE photos
+                        SET id_active ='N'
+        		         WHERE id = :id";      		
         		try{
+                    $sql = $this->db->prepare($sql);
+                    $sql->bindValue(":id",$photoId);
         			$sql->execute();
-        			$this->db->commit(); 
-        		}catch(Exception $e){
-        			$this->db->rollback();
-        			$response = "Failed to update photos";  
-        		}
-        		
-        		//Archiving photos' relationships
-        		if ($sql->rowCount() > 0){
-        			//Archiving photos' likes
-        			$sql = "UPDATE photo_likes 
-        			        SET id_active = 'N';  
-        			        WHERE id_photo = :id_photo";
-        			 $sql = $this->db->prepare($sql);
-        			 $sql->bindValue(":id_photo",$photoId);
-        			 try{
-        			 	$sql->execute();
-        			 	$this->db->commit(); 
-        			 }catch(Exception $e){
-        			 	$this->db->rollback();
-        			 	$response = "Failed to update photo_likes";  
-        			 }
-        			
+                }catch(Exception $e){
+                    $response['error'] = $e->getMessage(); 
+                }
 
-        			 //Archiving photos' comments 
-        			 $sql = "UPDATE photo_comments 
-        			         SET id_active = 'N'
-        			         WHERE id_photo = :id_photo";
-        			 $sql = $this->db->prepare($sql);
-        			 try{
-        			 	$sql->execute();
-        			 	$this->db->commit(); 
-        			 }catch(Exception $e){
-        			 	$this->db->rollback();
-        			 	$response = "Failed to update photo_comments"; 
-        			 }
-        			  
-        			 $response =  "record deleted sucessfully"; 
-        		}else{
-        			$response =  "Record was not deleted"; 
-        		}
-        	}else{
-        		$response =  "You are not allowed to delete this photo"; 
-        	}
+            } else {
+                $response['error'] =  "You are not allowed to delete this photo or it inexist";
+            }  
+            if (!isset($response['error'])){
+                $sql = "UPDATE photo_likes 
+                        SET id_active = 'N'  
+                        WHERE id_photo = :id_photo";
+                 try{
+                     $sql = $this->db->prepare($sql);
+                     $sql->bindValue(":id_photo",$photoId1);
+                      $sql->execute();
+                    }catch(Exception $e){
+                        $response['error'] = $e->getMessage();
+                    }                
+            }
+
+            if (!isset($response['error'])){
+                    $sql = "UPDATE photo_comments 
+                             SET id_active = 'N'
+                             WHERE id_photo = :id_photo";
+                    try{
+                        $sql = $this->db->prepare($sql);
+                         $sql->bindValue(":id_photo",$photoId);
+                         $sql->execute();
+                    }catch(Exception $e){
+                        $response['error'] = $e->getMessage();
+                    }             
+            }
+   
+            if (isset($response['error']) && !empty($response['error'])){
+                $this->db->rollback(); 
+            }else{
+                $this->db->commit(); 
+            }
         	return $response; 
         }
 	}

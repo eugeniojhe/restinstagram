@@ -21,7 +21,7 @@
 		    'logged' => false);
 		    $method = $this->getMethod();
 			$data = $this->getRequestData();
-			if ($method = "GET"){
+			if ($method == "GET"){
 				if (!empty($data['jwt'])){
 					if ($this->ioUser->validateJwt($data['jwt'])){
 						$response['logged'] = true;
