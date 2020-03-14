@@ -54,7 +54,8 @@
 		{
 			$sql = "SELECT id,password 
 			        FROM users
-			        WHERE email = :email"; 
+			        WHERE email = :email
+			        AND id_active <> UPPER('N')"; 
 			$sql = $this->db->prepare($sql); 
 			$sql->bindValue(":email",$email);
 			$sql->execute();
@@ -102,12 +103,12 @@
 		    $ioFollowers = new Followers(); 
 		    $ioPhotos = new Photos(); 
 		    $response = array(); 
-			$sql = "SELECT id, name, email, avatar FROM users 
+		    $sql = "SELECT id, name, email, avatar FROM users 
 			        WHERE id = :id
-			        AND id_active <> 'N' 
-			        OR id_active IS NULL"; 
+			        AND (id_active <> UPPER('N'))";  
+			         
 			$sql = $this->db->prepare($sql); 
-			$sql->bindValue(":id",$usrId); 
+			$sql->bindValue(":id",$usrId);
 			$sql->execute(); 
 			if ($sql->rowCount() > 0){
 				$response = $sql->fetch(PDO::FETCH_ASSOC); 
@@ -118,7 +119,8 @@
 				}
 				$response['following'] = $ioFollowers->getCountFollowing($usrId);
 				$response['followed']  = $ioFollowers->getCountFollowed($usrId); 
-				$response['user_photos'] = $ioPhotos->getCountPhotos($usrId); 
+				$response['user_photos'] = $ioPhotos->getCountPhotos($usrId);	
+				$response['user_parameter'] = $usrId; 
 			}
 			return $response; 
 		}
@@ -185,24 +187,61 @@
         //It will not delete from data base, 
         //this will be updated with "S" meaning active or "N" meaning inactive
 		public function delete($usrId,$data)
-		{
+		{   
+			$this->db->beginTransaction(); 
+			$response = array(); 
 			if ($usrId === $this->getId()){
 				if ($data['id_active'] == 'S' || $data['id_active'] == 'N'){
 						$sql = "UPDATE users SET id_active = :id_active
 						    WHERE id = :id";
-					    $sql = $this->db->prepare($sql);
-					    $sql->bindValue(":id_active",strtoupper($data['id_active']));
-					    $sql->bindValue(":id",$usrId); 
-					    $sql->execute(); 
-					    return 'Edit user went ok'; 
-					
+						try{
+							$sql = $this->db->prepare($sql);
+					   		 $sql->bindValue(":id_active",strtoupper($data['id_active']));
+					    	$sql->bindValue(":id",$usrId); 
+					    	$sql->execute();
+						}catch(Exception $e){
+                            $response['error'] = $e->getMessage(); 
+						} 
+						if (!isset($response['error']) && empty($response['error'])){
+                            $sql = "UPDATE photo_likes 
+                        		SET id_active = 'N'  
+                      			  WHERE id_user = :id_user";
+                			 try{
+                     			$sql = $this->db->prepare($sql);
+                     			$sql->bindValue(":id_user",$usrId);
+                      			$sql->execute();
+			                    }catch(Exception $e){
+			                        $response['error'] = $e->getMessage();
+			                    }
+						} 
+
+						if (!isset($response['error']) && empty($response['error'])){
+							$sql = "UPDATE photo_comments 
+                             SET id_active = 'N'
+                             WHERE id_user = :id_user";
+		                    try{
+		                        $sql = $this->db->prepare($sql);
+		                         $sql->bindValue(":id_user",$usrId);
+		                         $sql->execute();
+		                    }catch(Exception $e){
+		                        $response['error'] = $e->getMessage();
+		                    }
+						}   
+				 				
 				}else{
-					return "id_active must be 'N' or 'S'"; 
+					$response['error'] = "id_active must be 'N' or 'S'"; 
 				}
 
 			}else{
-				return "You are not able to edit this user"; 
+				$response['error'] = "You are not able to edit this user"; 
 			}
+
+			if (isset($response['error']) && !empty($response['error'])){
+				$this->db->rollback();
+			}else{
+				$this->db->commit(); 
+			}
+			return $response; 
 		}
 
 	}

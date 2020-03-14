@@ -139,5 +139,9 @@
 			$this->jsonReturn($response); 
 		}
 
+		function new_record(){
+			
+		}
+
 
 	}

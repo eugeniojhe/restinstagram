@@ -118,8 +118,8 @@
                     FROM photos p
                     LEFT JOIN users u ON(u.id = p.id_user)  
                     WHERE p.id  = :id
-                    AND (p.id_active = UPPER('S') 
-			        OR p.id_active IS NULL)";         
+                    AND p.id_active <> UPPER('N') 
+			        ";         
     		try{
     			 $sql = $this->db->prepare($sql); 
     			 $sql->bindValue(":id",$photoId); 
@@ -147,16 +147,16 @@
         	$sql = "SELECT id FROM photos 
         	        WHERE id = :id
                     AND id_user= :id_user
-                    AND (id_active = UPPER('S') 
-                    OR  id_active IS NULL)"; 
+                    AND id_active <> UPPER('N') 
+                    "; 
         	$sql = $this->db->prepare($sql); 
         	$sql->bindValue(":id",$photoId); 
         	$sql->bindValue(":id_user",$usrId); 
         	$sql->execute(); 
         	if ($sql->rowCount() > 0){
         		$sql =  "UPDATE photos
-                        SET id_active ='N'
-        		         WHERE id = :id";      		
+                         SET id_active ='N'
+        		         WHERE id = :id";  		
         		try{
                     $sql = $this->db->prepare($sql);
                     $sql->bindValue(":id",$photoId);

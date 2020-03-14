@@ -49,4 +49,84 @@
             }
             return $response; 
         }
+
+        public function store($followerId,$followedId)
+        {
+            $this->db->beginTransaction(); 
+            $response = '';
+            if ($followerId == $followedId) $response = "Yo can follow yourself";  
+            $sql = "SELECT id FROM followers 
+                    WHERE id_follower = :id_follower
+                    AND id_followed = :id_followed";
+           $sql = $this->db->prepare($sql); 
+           try{
+                $sql->bindValue(":id_follower",$followerId); 
+                $sql->bindValue(":id_followed",$followedId); 
+                $sql->execute(); 
+           }catch(Exception $e){
+               $response = "Failed to insert follower"; 
+           }
+            if ($response == '' && !$sql->rowCount() > 0)
+            {
+                $sql = "INSERT INTO 
+                        followers (id_follower, id_followed,dt_follow)
+                        VALUES (:id_follower,:id_followed, NOW())"; 
+                $sql = $this->db->prepare($sql); 
+                try{
+                    $sql->bindValue(":id_follower",$followerId);
+                    $sql->bindValue(":id_followed",$followedId); 
+                    $sql->execute();                
+                }catch(Exception $e){
+                     $response = $e->getMessage(); 
+                }
+                
+            }else{
+                $response = "You are already following this user"; 
+            }
+
+            if ($response == ''){
+                 $this->db->commit(); 
+            }else{
+                 $this->db->rollback(); 
+            }
+            return $response; 
+        }
+
+        public function delete($followerId,$followedId)
+        {
+            $this->db->beginTransaction(); 
+            $response = '';
+            $sql = "SELECT id WHERE id_follower = :id_follower AND id_followed = :id_followed";
+           $sql = $this->db->prepare($sql); 
+           try{
+                $sql->bindValue(":id_follower",$followerId); 
+                $sql->bindValue(":id_followed",$followedId); 
+                $sql->execute(); 
+           }catch(Exception $e){
+               $this->db->rollback(); 
+               $response = "You are not following this user"; 
+           }
+            if ($reponse == '' && $sql->rowCount() > 0)
+            {
+                $sql = "DELETE followers 
+                        WHERE id_follower = :id_follower 
+                        AND id_followed = :id_followed"; 
+
+                try{
+                    $sql->bindValue(":id_follower",$followerId);
+                    $sql->bindValue(":id_followed",$followedId); 
+                    $sql->execute();                   
+                }catch(Exception $e){
+                    $this->db->rollback(); 
+                    $response = $e->getMessage(); 
+                }
+                
+            }
+            if ($respose == ''){
+                $this->db->commit(); 
+            }else{
+                $this->db->rollback(); 
+            }
+            return $response; 
+        }
 	}

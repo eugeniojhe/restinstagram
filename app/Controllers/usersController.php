@@ -3,9 +3,9 @@
 	use lib\Core\Controller;
 	use app\Models\Users; 
 	use app\Models\Photos; 
+	use app\Models\Followers; 
 
 	class usersController extends Controller {
-		private $idUser; 
 		private $ioUser;
         public function __construct()
         {
@@ -24,7 +24,7 @@
 						$response['jwt'] = $this->ioUser->createJwt(); 
 
 					}else {
-						$response['error'] = 'Senha/Email invalido'; 
+						$response['error'] = 'Senha/Email invalido or user is inactive'; 
 					}
 
 				}else{
@@ -74,7 +74,7 @@
 		    'logged' => false); 
 		    $method = $this->getMethod();
 			$data = $this->getRequestData();
-		    if (is_int($usr_id)){
+			if (is_int(intval($usr_id)) && intval($usr_id) > 0){
 		    	if (!empty($data['jwt'])){
 					if ($this->ioUser->validateJwt($data['jwt'])){
 						$response['logged'] = true;
@@ -108,7 +108,7 @@
 				}
 
 		    }else{
-		    	$response['error'] = "Parameter [{$usr_id}] must be numeric for action ".__METHOD__; 
+		    	$response['error'] = "Parameter [{$usr_id}] must be numeric for action or greater than zeros ".__METHOD__; 
 		    }
 							
 			$this->jsonReturn($response); 
@@ -175,5 +175,46 @@
 			$this->jsonReturn($response); 
 		}
 
+		public function follow($usr_id)
+		{
+			$response = array(
+		    'error'  => '',
+		    'logged' => false);
+		    $ioFollowers = new Followers();  
+		    $method = $this->getMethod();
+			$data = $this->getRequestData();
+			
+			if (!empty($data['jwt'])){
+				if ($this->ioUser->validateJwt($data['jwt'])){
+					$response['logged'] = true;
+					$response['isMe'] = false; 
+					if($usr_id == $this->ioUser->getId()){
+							$response['isMe'] = true;
+					} 
 
+					switch($method){
+						case "POST":
+						    if ($response['isMe']){
+						    	$response['error'] = 'You can not follow yourself'; 
+						    }else{
+						    	$response['error'] = $ioFollowers->store($this->ioUser->getId(),$usr_id,);	
+						    } 
+						    
+							break;
+						case "DELETE":
+							$response['error'] = $ioFollowers->delete($this->ioUser->getId(),$usr_id,);
+						    break; 
+						default:
+						  $reponse['error'] = "Please enter a valide method. It must be POST or DELETE method"; 
+					}
+					        
+				}else {
+					$response['error'] = "Please enter a valid jwt"; 
+				}
+
+			}else{
+					$response['error'] = "Please jwt is required for this method"; 
+			}
+			$this->jsonReturn($response); 
+		}
 	}

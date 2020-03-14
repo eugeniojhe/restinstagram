@@ -12,7 +12,7 @@
 			$url .= $_GET['url'];
 		}
 		$url = $this->checkRoutes($url);
-		
+
 		$params = array();
 		if(!empty($url) && $url != '/') {
 			$url = explode('/', $url);
