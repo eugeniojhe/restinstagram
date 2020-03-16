@@ -3,6 +3,8 @@
 	use lib\Core\Controller;
 	use app\Models\Users; 
 	use app\Models\Photos; 
+	use app\Models\Photo_Comments; 
+	use app\Models\Photo_likes; 
 
 	class photosController extends Controller {
 		private $ioUser; 
@@ -139,8 +141,99 @@
 			$this->jsonReturn($response); 
 		}
 
-		function new_record(){
-			
+		public function comment($photoId)
+		{
+			$response = array(
+		    'error'  => '',
+		    'logged' => false); 
+		    $ioPhotoComments = new Photo_Comments(); 
+			$method = $this->getMethod();
+			$data = $this->getRequestData();
+			if (!empty($data['jwt'])){
+				if ($this->ioUser->validateJwt($data['jwt'])){
+					$response['logged'] = true;
+					if (isset($data['comment']) && !empty($data['comment'])){
+						switch($method){
+							case "POST":
+				   				$response['error'] =  $ioPhotoComments->store($photoId,$this->ioUser->getId(),$data['comment']);
+				   				break; 			 
+							default:
+				 				$response['error'] = "Invalid Method {$method} for this app - Please use POST method";  
+				    		break;
+			    		}
+
+					}else{
+						$response['error'] = "You must add a comment"; 
+					}
+				
+				}else{
+					$response['error'] = "jwt is not valid for this user"; 
+				}
+			}else{
+				$response['error'] = "Access Denied - Please enter JWT hash";
+			}				
+			$this->jsonReturn($response); 
+		}
+
+		public function delcomment($commentId)
+		{
+			$response = array(
+		    'error'  => '',
+		    'logged' => false); 
+		    $ioPhotoComments = new Photo_Comments(); 
+			$method = $this->getMethod();
+			$data = $this->getRequestData();
+			if (!empty($data['jwt'])){
+				if ($this->ioUser->validateJwt($data['jwt'])){
+					$response['logged'] = true;
+						switch($method){
+							case "DELETE":
+				   				$response['error'] =  $ioPhotoComments->delete($commentId,$this->ioUser->getId(),$data['comment']);	
+				   				break; 			 
+							default:
+				 				$response['error'] = "Invalid Method {$method} for this action - Please use DELETE method";  
+				    		break;
+			    		}
+					
+				}else{
+					$response['error'] = "jwt is not valid for this user"; 
+				}
+			}else{
+				$response['error'] = "Access Denied - Please enter JWT hash";
+			}				
+			$this->jsonReturn($response); 
+		}
+
+		public function like($photoId)
+		{
+			$response = array(
+		    'error'  => '',
+		    'logged' => false); 
+		    $ioPhotoLikes = new Photo_Likes(); 
+			$method = $this->getMethod();
+			$data = $this->getRequestData();
+			if (!empty($data['jwt'])){
+				if ($this->ioUser->validateJwt($data['jwt'])){
+					$response['logged'] = true;
+						switch($method){
+							case "POST":
+				   				$response['error'] =  $ioPhotoLikes->store($photoId,$this->ioUser->getId());
+				   				break; 
+				   			case "DELETE":
+				   				$response['error'] =  $ioPhotoLikes->delete($photoId,$this->ioUser->getId());
+				   				break; 				 
+							default:
+				 				$response['error'] = "Invalid Method {$method} for this app - Please use POST method";  
+				    		break;
+			    		}
+				
+				}else{
+					$response['error'] = "jwt is not valid for this user"; 
+				}
+			}else{
+				$response['error'] = "Access Denied - Please enter JWT hash";
+			}				
+			$this->jsonReturn($response); 
 		}
 
 

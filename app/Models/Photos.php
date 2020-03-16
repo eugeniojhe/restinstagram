@@ -108,7 +108,6 @@
         	return $response; 
         }
 
-
         public function get($photoId)
         {
         	$response = array();
@@ -118,8 +117,7 @@
                     FROM photos p
                     LEFT JOIN users u ON(u.id = p.id_user)  
                     WHERE p.id  = :id
-                    AND p.id_active <> UPPER('N') 
-			        ";         
+                    AND (p.id_active <> UPPER('N') OR p.id_active IS  NULL)";         
     		try{
     			 $sql = $this->db->prepare($sql); 
     			 $sql->bindValue(":id",$photoId); 
@@ -147,8 +145,7 @@
         	$sql = "SELECT id FROM photos 
         	        WHERE id = :id
                     AND id_user= :id_user
-                    AND id_active <> UPPER('N') 
-                    "; 
+                    AND (id_active <> UPPER('N') OR id_active IS NULL)"; 
         	$sql = $this->db->prepare($sql); 
         	$sql->bindValue(":id",$photoId); 
         	$sql->bindValue(":id_user",$usrId); 
@@ -156,10 +153,12 @@
         	if ($sql->rowCount() > 0){
         		$sql =  "UPDATE photos
                          SET id_active ='N'
-        		         WHERE id = :id";  		
+        		         WHERE id = :id
+                         AND id_user = :id_user";  		
         		try{
                     $sql = $this->db->prepare($sql);
                     $sql->bindValue(":id",$photoId);
+                    $sql->bindValue(":id_user",$usrId); 
         			$sql->execute();
                 }catch(Exception $e){
                     $response['error'] = $e->getMessage(); 
@@ -174,7 +173,7 @@
                         WHERE id_photo = :id_photo";
                  try{
                      $sql = $this->db->prepare($sql);
-                     $sql->bindValue(":id_photo",$photoId1);
+                     $sql->bindValue(":id_photo",$photoId);
                       $sql->execute();
                     }catch(Exception $e){
                         $response['error'] = $e->getMessage();
