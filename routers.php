@@ -10,9 +10,10 @@
 
 	$routes['/photos/random'] = "/photos/random"; 
 	$routes['/photos/new'] = '/photos/new_record';
+	$routes['/photos/loadFile']  = "/photos/loadFile"; 
 	$routes['/photos/{id}'] = '/photos/view/:id'; 
 	$routes['/photos/{id}/comment'] = '/photos/comment/:id'; 
 	$routes['/comments/{id}'] =  "/photos/delcomment/:id"; 
-	$routes['/photos/{id}/like'] = "/photos/like/:id"; 
-	
+	$routes['/photos/{id}/like'] = "/photos/like/:id";
+
 

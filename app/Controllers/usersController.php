@@ -216,5 +216,5 @@
 					$response['error'] = "Please jwt is required for this method"; 
 			}
 			$this->jsonReturn($response); 
-		}
+		}		
 	}
